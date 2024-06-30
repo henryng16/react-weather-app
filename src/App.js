@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 const api = {
   key: "51f1a56d56a5b28d57a7a2b08fd74cc1",
-  base: "https://openweathermap.org/data/2.5/weather",
+  base: "https://api.openweathermap.org/data/2.5/",
 };
 
 function App() {
@@ -9,7 +9,7 @@ function App() {
   const [searchCity, setSearchCity] = useState("");
   const [weatherInfo, setWeatherInfo] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMessgae, setErrorMessage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchWeatherData = async () => {
@@ -17,14 +17,26 @@ function App() {
       setLoading(true);
       // Process
       try {
-        const url = `${api.base}?q=${searchCity}&units=metric&APPID=${api.key}`;
+        const url = `${api.base}weather?q=${searchCity}&units=metric&APPID=${api.key}`;
         const response = await fetch(url);
         const data = await response.json();
-        setWeatherInfo(JSON.stringify(data));
+        console.log(data.main.temp);
+        if (response.ok) {
+          setErrorMessage("");
+          setWeatherInfo(
+            [
+              data.name,
+              data.sys.country,
+              data.weather[0].description,
+              data.main.temp,
+            ].join(", ")
+          );
+        } else {
+          setErrorMessage(data.message);
+        }
       } catch (error) {
         setErrorMessage(error.message);
       }
-
       setLoading(false);
     };
     fetchWeatherData();
@@ -32,6 +44,8 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // setWeatherInfo("");
+    // setErrorMessage("");
     setSearchCity(searchInput);
   };
 
@@ -46,7 +60,17 @@ function App() {
         />
         <button>Search</button>
       </form>
-      <div>{weatherInfo}</div>
+      {loading ? (
+        <div>Loading data...</div>
+      ) : (
+        <>
+          {errorMessage ? (
+            <div style={{ color: "red" }}>{errorMessage}</div>
+          ) : (
+            <div>{weatherInfo}</div>
+          )}
+        </>
+      )}
     </>
   );
 }
